@@ -28,7 +28,7 @@ public class AssignmentControllerTest {
     private MockMvc mockMvc;  // Inject MockMvc
 
     @MockBean
-    private AssignmentRepository assignmentRepository;  // Mock the repository
+    private AssignmentRepository assignmentRepository;  // Mock the repository hello
 
     @MockBean
     private UserRepository userRepository;  // Mock the user repository
