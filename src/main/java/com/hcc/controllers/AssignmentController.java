@@ -3,24 +3,25 @@ package com.hcc.controllers;
 import com.hcc.dto.AssignmentResponseDto;
 import com.hcc.entities.Assignment;
 import com.hcc.entities.User;
-import com.hcc.enums.AssignmentStatusEnum;  // Import your enum
+import com.hcc.enums.AssignmentStatusEnum;
 import com.hcc.exceptions.ResourceNotFoundException;
 import com.hcc.repositories.AssignmentRepository;
 import com.hcc.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Arrays;
+import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/assignments")
 public class AssignmentController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AssignmentController.class);
 
     @Autowired
     private AssignmentRepository assignmentRepository;
@@ -37,79 +38,70 @@ public class AssignmentController {
                 .collect(Collectors.toList());
     }
 
+    // Get specific assignment by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<AssignmentResponseDto> getAssignmentById(@PathVariable Long id) {
+        return assignmentRepository.findById(id)
+                .map(assignment -> ResponseEntity.ok(new AssignmentResponseDto(assignment)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new AssignmentResponseDto("Assignment not found")));
+    }
+
     // Create a new assignment
-    @PostMapping
-    public ResponseEntity<AssignmentResponseDto> createAssignment(@RequestBody Assignment assignment) {
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<AssignmentResponseDto> createAssignment(@Valid @RequestBody Assignment assignment) {
+        logger.info("Received assignment: " + assignment);  // Log incoming assignment
+
         try {
-            // Ensure that status is valid
-            AssignmentStatusEnum statusEnum = AssignmentStatusEnum.fromString(assignment.getStatus());
+            // Ensure the status is correctly mapped from the string to the enum
+            AssignmentStatusEnum statusEnum = AssignmentStatusEnum.fromString(assignment.getStatus().toString());
+            assignment.setStatus(statusEnum);
 
-            if (statusEnum == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new AssignmentResponseDto("Invalid status: " + assignment.getStatus()));
-            }
-
-            assignment.setStatus(statusEnum.getStatus()); // Set the status as the valid enum
-
-            // Find user by username
+            // Retrieve the user by username
             User user = userRepository.findByUsername(assignment.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found with username: " + assignment.getUsername()));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + assignment.getUsername()));
 
+            // Set user and save the assignment
             assignment.setUser(user);
-
-            // Save the assignment
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             return ResponseEntity.ok(new AssignmentResponseDto(savedAssignment));
-
-        } catch (RuntimeException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("Error creating assignment: ", e);  // Log error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new AssignmentResponseDto("Error: " + e.getMessage()));
         }
     }
 
 
-
-
-    // Get a specific assignment by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<AssignmentResponseDto> getAssignmentById(@PathVariable Long id) {
-        try {
-            Assignment assignment = assignmentRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + id));
-            return ResponseEntity.ok(new AssignmentResponseDto(assignment));
-        } catch (RuntimeException e) {
-            System.out.println("Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AssignmentResponseDto("Assignment not found"));
-        }
-    }
+    // Update an existing assignment
     @PutMapping("/{id}")
     public ResponseEntity<Assignment> updateAssignment(@PathVariable Long id, @RequestBody Assignment updatedAssignment) {
-        Optional<Assignment> existingAssignment = assignmentRepository.findById(id);
-
-        if (existingAssignment.isPresent()) {
-            Assignment assignment = existingAssignment.get();
-            assignment.setStatus(updatedAssignment.getStatus());
-            assignment.setNumber(updatedAssignment.getNumber());
-            assignment.setGithubUrl(updatedAssignment.getGithubUrl());
-            assignment.setBranch(updatedAssignment.getBranch());
-            assignment.setReviewVideoUrl(updatedAssignment.getReviewVideoUrl());
-
-            User user = userRepository.findByUsername(updatedAssignment.getUsername())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-            assignment.setUser(user);
-
-            Assignment savedAssignment = assignmentRepository.save(assignment);
-            return ResponseEntity.ok(savedAssignment);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Not found if assignment doesn't exist
-        }
+        return assignmentRepository.findById(id)
+                .map(existingAssignment -> {
+                    existingAssignment.setStatus(updatedAssignment.getStatus());
+                    existingAssignment.setNumber(updatedAssignment.getNumber());
+                    existingAssignment.setGithubUrl(updatedAssignment.getGithubUrl());
+                    existingAssignment.setBranch(updatedAssignment.getBranch());
+                    existingAssignment.setReviewVideoUrl(updatedAssignment.getReviewVideoUrl());
+                    assignmentRepository.save(existingAssignment);
+                    return ResponseEntity.ok(existingAssignment);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteAssignment(@PathVariable Long id) {
+        try {
+            // Check if the assignment exists
+            if (assignmentRepository.existsById(id)) {
+                // Delete the assignment
+                assignmentRepository.deleteById(id);
+                return ResponseEntity.ok("Assignment deleted successfully.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Assignment not found.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting assignment: " + e.getMessage());
+        }
+    }
 }
-
-
-
-
-

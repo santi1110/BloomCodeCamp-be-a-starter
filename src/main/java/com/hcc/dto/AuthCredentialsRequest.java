@@ -1,8 +1,14 @@
 package com.hcc.dto;
 
+import javax.validation.constraints.NotBlank;
+
 public class AuthCredentialsRequest {
+    @NotBlank
     private String username;
+
+    @NotBlank
     private String password;
+
 
     public String getUsername() {
         return username;

@@ -1,33 +1,33 @@
 package com.hcc.dto;
 
 import com.hcc.entities.Assignment;
-import com.hcc.entities.User;
 import com.hcc.enums.AssignmentStatusEnum;
 
 public class AssignmentResponseDto {
+
     private Long id;
     private String status;
     private Integer number;
     private String githubUrl;
     private String branch;
     private String reviewVideoUrl;
-    private String username; // Add user details without circular references
+    private String username;
     private AssignmentStatusEnum[] assignmentStatusEnums = AssignmentStatusEnum.values();
 
     // Constructor to initialize fields from Assignment entity
     public AssignmentResponseDto(Assignment assignment) {
         this.id = assignment.getId();
-        this.status = assignment.getStatus();
+        this.status = assignment.getStatus().name();
         this.number = assignment.getNumber();
         this.githubUrl = assignment.getGithubUrl();
         this.branch = assignment.getBranch();
         this.reviewVideoUrl = assignment.getReviewVideoUrl();
-        this.username = assignment.getUser().getUsername(); // Extract username only
+        this.username = assignment.getUser().getUsername();
     }
 
-    // Constructor for handling errors
+    // Constructor for error messages
     public AssignmentResponseDto(String message) {
-        this.status = message; // Use the status field for error messages
+        this.status = message;
     }
 
     // Getters and Setters
@@ -91,6 +91,7 @@ public class AssignmentResponseDto {
         return assignmentStatusEnums;
     }
 }
+
 
 
 

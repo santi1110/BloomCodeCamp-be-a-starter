@@ -23,15 +23,13 @@ public enum AssignmentStatusEnum {
         return step;
     }
 
-    // Optionally, add a method to parse from string
+    // Method to map a string to an enum
     public static AssignmentStatusEnum fromString(String text) {
         for (AssignmentStatusEnum status : AssignmentStatusEnum.values()) {
-            if (status.status.equalsIgnoreCase(text)) {
+            if (status.name().equalsIgnoreCase(text)) { // Use name() to match enum names
                 return status;
             }
         }
         throw new IllegalArgumentException("Invalid status: " + text);
     }
 }
-
-
