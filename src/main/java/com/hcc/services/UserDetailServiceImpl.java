@@ -2,7 +2,6 @@ package com.hcc.services;
 
 import com.hcc.entities.User;
 import com.hcc.repositories.UserRepository;
-import com.hcc.utils.CustomPasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,9 +12,6 @@ import java.util.Optional;
 
 @Service
 public class UserDetailServiceImpl implements UserDetailsService {
-
-    @Autowired
-    private CustomPasswordEncoder passwordEncoder;
 
     @Autowired
     private UserRepository userRepo;
@@ -31,8 +27,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .roles("LEARNER") // Replace "LEARNER" with actual roles if available
+                .roles("LEARNER") // Use roles from your user model
                 .build();
     }
 }
-

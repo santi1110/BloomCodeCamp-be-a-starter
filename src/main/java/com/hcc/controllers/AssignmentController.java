@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/assignments")
+@RequestMapping("/api/assignments") // Ensures the base path matches your API documentation
 public class AssignmentController {
 
     private static final Logger logger = LoggerFactory.getLogger(AssignmentController.class);

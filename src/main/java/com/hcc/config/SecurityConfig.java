@@ -1,6 +1,5 @@
 package com.hcc.config;
 
-
 import com.hcc.filters.AuthenticatorFilter;
 import com.hcc.services.UserDetailServiceImpl;
 import com.hcc.utils.CustomPasswordEncoder;
@@ -28,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private CustomPasswordEncoder customPasswordEncoder;
 
     @Autowired
-    private AuthenticatorFilter authenticatorFilter; // Corrected the injected filter
+    private AuthenticatorFilter authenticatorFilter;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -39,10 +38,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/assignments/**").hasRole("LEARNER")
-                .antMatchers("/reviews/**").hasRole("REVIEWER")
-                .anyRequest().authenticated()
+                .antMatchers("/api/auth/**").permitAll() // Permit authentication endpoint without authentication
+                .antMatchers("/assignments/**").hasRole("LEARNER") // Access control for assignments
+                .anyRequest().authenticated() // All other requests need authentication
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
@@ -53,7 +51,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     response.getWriter().write("{\"error\": \"Unauthorized\"}");
                 });
 
-        // Add AuthenticatorFilter
+        // Add the authenticator filter before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(authenticatorFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
