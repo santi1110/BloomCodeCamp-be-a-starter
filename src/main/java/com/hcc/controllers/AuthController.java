@@ -48,13 +48,14 @@ public class AuthController {
             return ResponseEntity.status(401).body("{\"error\": \"Invalid username or password\"}");
         }
     }
+
     // Validate token endpoint
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7); // Get token from header
             try {
-                if (jwtUtils.validateToken(token, null)) { // You can replace 'null' with actual UserDetails if needed
+                if (jwtUtils.validateToken(token)) {
                     return ResponseEntity.ok("Token is valid");
                 } else {
                     return ResponseEntity.status(401).body("{\"error\": \"Invalid token\"}");
