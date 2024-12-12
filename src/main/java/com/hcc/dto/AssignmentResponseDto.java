@@ -17,12 +17,12 @@ public class AssignmentResponseDto {
     // Constructor to initialize fields from Assignment entity
     public AssignmentResponseDto(Assignment assignment) {
         this.id = assignment.getId();
-        this.status = assignment.getStatus().name();
+        this.status = assignment.getStatus().name(); // Convert enum to string
         this.number = assignment.getNumber();
         this.githubUrl = assignment.getGithubUrl();
         this.branch = assignment.getBranch();
         this.reviewVideoUrl = assignment.getReviewVideoUrl();
-        this.username = assignment.getUser().getUsername();
+        this.username = assignment.getUser().getUsername(); // Extract username
     }
 
     // Constructor for error messages
@@ -91,9 +91,3 @@ public class AssignmentResponseDto {
         return assignmentStatusEnums;
     }
 }
-
-
-
-
-
-

@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,8 +31,9 @@ public class AssignmentController {
     @Autowired
     private UserRepository userRepository;
 
-    // Get all assignments
+    // Get all assignments - Restricted to learners
     @GetMapping
+    @PreAuthorize("hasRole('LEARNER')") // Only learners can access
     public List<AssignmentResponseDto> getAllAssignments() {
         List<Assignment> assignments = assignmentRepository.findAll();
         return assignments.stream()
@@ -38,8 +41,9 @@ public class AssignmentController {
                 .collect(Collectors.toList());
     }
 
-    // Get specific assignment by ID
+    // Get specific assignment by ID - Restricted to learners
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('LEARNER')") // Only learners can access
     public ResponseEntity<AssignmentResponseDto> getAssignmentById(@PathVariable Long id) {
         return assignmentRepository.findById(id)
                 .map(assignment -> ResponseEntity.ok(new AssignmentResponseDto(assignment)))
@@ -47,8 +51,9 @@ public class AssignmentController {
                         .body(new AssignmentResponseDto("Assignment not found")));
     }
 
-    // Create a new assignment
+    // Create a new assignment - Restricted to learners
     @PostMapping(consumes = "application/json", produces = "application/json")
+    @PreAuthorize("hasRole('LEARNER')") // Only learners can create assignments
     public ResponseEntity<AssignmentResponseDto> createAssignment(@Valid @RequestBody Assignment assignment) {
         logger.info("Received assignment: " + assignment);  // Log incoming assignment
 
@@ -72,9 +77,9 @@ public class AssignmentController {
         }
     }
 
-
-    // Update an existing assignment
+    // Update an existing assignment - Restricted to learners
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('LEARNER')") // Only learners can update assignments
     public ResponseEntity<Assignment> updateAssignment(@PathVariable Long id, @RequestBody Assignment updatedAssignment) {
         return assignmentRepository.findById(id)
                 .map(existingAssignment -> {
@@ -89,7 +94,9 @@ public class AssignmentController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // Delete an assignment - Restricted to admins
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')") // Only admins can delete assignments
     public ResponseEntity<String> deleteAssignment(@PathVariable Long id) {
         try {
             // Check if the assignment exists
