@@ -1,21 +1,20 @@
-/*package com.hcc;
+/*
+package com.hcc;
 
 import com.hcc.controllers.AssignmentController;
 import com.hcc.entities.Assignment;
 import com.hcc.entities.User;
+import com.hcc.enums.AssignmentStatusEnum;
 import com.hcc.repositories.AssignmentRepository;
 import com.hcc.repositories.UserRepository;
-import com.hcc.enums.AssignmentStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
@@ -23,144 +22,131 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest  // Load the full Spring context
 public class AssignmentControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;  // Inject MockMvc
+    private MockMvc mockMvc;
 
-    @MockBean
-    private AssignmentRepository assignmentRepository;  // Mock the repository
+    @Mock
+    private AssignmentRepository assignmentRepository;
 
-    @MockBean
-    private UserRepository userRepository;  // Mock the user repository
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
-    private AssignmentController assignmentController;  // Inject the controller
+    private AssignmentController assignmentController;
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);  // Initialize mocks
+        MockitoAnnotations.openMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(assignmentController).build();
     }
 
     @Test
     public void testCreateAssignment() throws Exception {
-        // Create a mock user
         User user = new User();
+        user.setId(1L);
         user.setUsername("testuser");
         user.setPassword("password123");
 
-        // Create the assignment and associate it with the user
         Assignment assignment = new Assignment();
-        assignment.setStatus(AssignmentStatusEnum.IN_REVIEW);  // Set enum status directly
+        assignment.setId(1L);
+        assignment.setStatus(AssignmentStatusEnum.PENDING_SUBMISSION);
         assignment.setNumber(3);
         assignment.setGithubUrl("https://github.com/test/repo3");
         assignment.setBranch("main");
-        assignment.setReviewVideoUrl(null);
-        assignment.setUsername("testuser");
-        assignment.setUser(user);  // Associate user with assignment
+        assignment.setUser(user);
 
-        // Mock the userRepository to return a valid user
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(assignmentRepository.save(any(Assignment.class))).thenReturn(assignment);
 
-        // Perform the POST request
-        mockMvc.perform(post("/assignments")
+        String jsonPayload = "{"
+                + "\"status\":\"PENDING_SUBMISSION\","
+                + "\"number\":3,"
+                + "\"githubUrl\":\"https://github.com/test/repo3\","
+                + "\"branch\":\"main\","
+                + "\"username\":\"testuser\"}";
+
+        mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"IN_REVIEW\",\"number\":3,\"githubUrl\":\"https://github.com/test/repo3\",\"branch\":\"main\",\"reviewVideoUrl\":null,\"username\":\"testuser\"}"))
-                .andExpect(status().isOk())  // Expect HTTP 200
-                .andExpect(jsonPath("$.status").value("IN_REVIEW"))
+                        .content(jsonPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING_SUBMISSION"))
                 .andExpect(jsonPath("$.number").value(3));
     }
 
     @Test
     public void testGetAssignmentById() throws Exception {
-        // Create a mock user and assignment
         User user = new User();
         user.setUsername("testuser");
-        user.setPassword("password123");
 
         Assignment assignment = new Assignment();
         assignment.setId(1L);
-        assignment.setStatus(AssignmentStatusEnum.IN_REVIEW);  // Set enum status directly
+        assignment.setStatus(AssignmentStatusEnum.PENDING_SUBMISSION);
         assignment.setNumber(3);
         assignment.setGithubUrl("https://github.com/test/repo3");
         assignment.setBranch("main");
-        assignment.setReviewVideoUrl("https://video.url/review");
-        assignment.setUser(user);  // Set user for the assignment
+        assignment.setUser(user);
 
-        // Mock repository calls
         when(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment));
 
-        // Perform the GET request
-        mockMvc.perform(get("/assignments/{id}", 1))
+        mockMvc.perform(get("/api/assignments/{id}", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("IN_REVIEW"))
-                .andExpect(jsonPath("$.number").value(3))
-                .andExpect(jsonPath("$.githubUrl").value("https://github.com/test/repo3"));
+                .andExpect(jsonPath("$.status").value("PENDING_SUBMISSION"))
+                .andExpect(jsonPath("$.number").value(3));
     }
 
     @Test
     public void testGetAssignmentByInvalidId() throws Exception {
-        // Mock repository to return empty for a non-existing assignment
         when(assignmentRepository.findById(100L)).thenReturn(Optional.empty());
 
-        // Perform the GET request for invalid ID
-        mockMvc.perform(get("/assignments/{id}", 100))
+        mockMvc.perform(get("/api/assignments/{id}", 100))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     public void testUpdateAssignment() throws Exception {
-        // Create a mock user and existing assignment
-        User user = new User();
-        user.setUsername("testuser");
-        user.setPassword("password123");
+        Assignment existingAssignment = new Assignment();
+        existingAssignment.setId(1L);
+        existingAssignment.setStatus(AssignmentStatusEnum.PENDING_SUBMISSION);
+        existingAssignment.setNumber(1);
+        existingAssignment.setGithubUrl("https://github.com/test/repo");
+        existingAssignment.setBranch("main");
 
-        Assignment assignment = new Assignment();
-        assignment.setId(1L);
-        assignment.setStatus(AssignmentStatusEnum.PENDING_SUBMISSION);  // Set enum status directly
-        assignment.setNumber(1);
-        assignment.setGithubUrl("https://github.com/test/repo");
-        assignment.setBranch("main");
-        assignment.setReviewVideoUrl(null);
-        assignment.setUser(user);
+        // Mock repository behavior
+        when(assignmentRepository.findById(1L)).thenReturn(Optional.of(existingAssignment));
+        when(assignmentRepository.save(any(Assignment.class))).thenAnswer(invocation -> {
+            Assignment updatedAssignment = invocation.getArgument(0);
+            existingAssignment.setStatus(updatedAssignment.getStatus());
+            existingAssignment.setNumber(updatedAssignment.getNumber());
+            existingAssignment.setGithubUrl(updatedAssignment.getGithubUrl());
+            existingAssignment.setBranch(updatedAssignment.getBranch());
+            return existingAssignment;
+        });
 
-        // Mock repository calls
-        when(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment));
-        when(assignmentRepository.save(any(Assignment.class))).thenReturn(assignment);
+        // JSON payload with enum matching
+        String jsonPayload = "{"
+                + "\"status\":\"IN_REVIEW\"," // Enum name in JSON
+                + "\"number\":3,"
+                + "\"githubUrl\":\"https://github.com/test/repo3\","
+                + "\"branch\":\"main\"}";
 
-        // Perform the PUT request
-        mockMvc.perform(put("/assignments/{id}", 1)
+        mockMvc.perform(put("/api/assignments/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"IN_REVIEW\",\"number\":3,\"githubUrl\":\"https://github.com/test/repo3\",\"branch\":\"main\",\"reviewVideoUrl\":null,\"username\":\"testuser\"}"))
+                        .content(jsonPayload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("IN_REVIEW"))
                 .andExpect(jsonPath("$.number").value(3));
     }
 
+
+
     @Test
     public void testDeleteAssignment() throws Exception {
-        // Create a mock user and assignment
-        User user = new User();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-
-        Assignment assignment = new Assignment();
-        assignment.setId(1L);
-        assignment.setStatus(AssignmentStatusEnum.PENDING_SUBMISSION);  // Set enum status directly
-        assignment.setNumber(1);
-        assignment.setGithubUrl("https://github.com/test/repo");
-        assignment.setBranch("main");
-        assignment.setReviewVideoUrl(null);
-        assignment.setUser(user);
-
-        // Mock repository calls
-        when(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment));
+        when(assignmentRepository.existsById(1L)).thenReturn(true);
         doNothing().when(assignmentRepository).deleteById(1L);
 
-        // Perform the DELETE request
-        mockMvc.perform(delete("/assignments/{id}", 1))
+        mockMvc.perform(delete("/api/assignments/{id}", 1))
                 .andExpect(status().isOk());
     }
-}*/
+}
+*/

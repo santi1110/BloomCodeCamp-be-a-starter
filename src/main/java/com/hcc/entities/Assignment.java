@@ -37,23 +37,18 @@ public class Assignment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "code_reviewer_id")
-    private User codeReviewer;
-
     @Transient
     private String username; // Temporary field to handle the username during POST request
 
     public Assignment() {}
 
-    public Assignment(AssignmentStatusEnum status, Integer number, String githubUrl, String branch, String reviewVideoUrl, User user, User codeReviewer) {
+    public Assignment(AssignmentStatusEnum status, Integer number, String githubUrl, String branch, String reviewVideoUrl, User user) {
         this.status = status;
         this.number = number;
         this.githubUrl = githubUrl;
         this.branch = branch;
         this.reviewVideoUrl = reviewVideoUrl;
         this.user = user;
-        this.codeReviewer = codeReviewer;
     }
 
     // Getters and Setters
@@ -113,14 +108,6 @@ public class Assignment {
         this.user = user;
     }
 
-    public User getCodeReviewer() {
-        return codeReviewer;
-    }
-
-    public void setCodeReviewer(User codeReviewer) {
-        this.codeReviewer = codeReviewer;
-    }
-
     public String getUsername() {
         return username;
     }
@@ -129,3 +116,5 @@ public class Assignment {
         this.username = username;
     }
 }
+
+
