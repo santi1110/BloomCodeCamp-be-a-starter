@@ -1,4 +1,3 @@
-/*
 package com.hcc;
 
 import com.hcc.controllers.AssignmentController;
@@ -105,12 +104,20 @@ public class AssignmentControllerTest {
 
     @Test
     public void testUpdateAssignment() throws Exception {
+        // Mock user
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setPassword("password123");
+
+        // Mock assignment
         Assignment existingAssignment = new Assignment();
         existingAssignment.setId(1L);
         existingAssignment.setStatus(AssignmentStatusEnum.PENDING_SUBMISSION);
         existingAssignment.setNumber(1);
         existingAssignment.setGithubUrl("https://github.com/test/repo");
         existingAssignment.setBranch("main");
+        existingAssignment.setUser(user); // Associate user with the assignment
 
         // Mock repository behavior
         when(assignmentRepository.findById(1L)).thenReturn(Optional.of(existingAssignment));
@@ -123,20 +130,29 @@ public class AssignmentControllerTest {
             return existingAssignment;
         });
 
-        // JSON payload with enum matching
+        // JSON payload for the update request
         String jsonPayload = "{"
-                + "\"status\":\"IN_REVIEW\"," // Enum name in JSON
+                + "\"status\":\"IN_REVIEW\","
                 + "\"number\":3,"
                 + "\"githubUrl\":\"https://github.com/test/repo3\","
-                + "\"branch\":\"main\"}";
+                + "\"branch\":\"main\","
+                + "\"reviewVideoUrl\":\"https://youtube.com/review-video\"}";
 
+        // Perform the PUT request
         mockMvc.perform(put("/api/assignments/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonPayload))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk()) // Expect HTTP 200 OK
                 .andExpect(jsonPath("$.status").value("IN_REVIEW"))
-                .andExpect(jsonPath("$.number").value(3));
+                .andExpect(jsonPath("$.number").value(3))
+                .andExpect(jsonPath("$.githubUrl").value("https://github.com/test/repo3"))
+                .andExpect(jsonPath("$.branch").value("main"))
+                .andExpect(jsonPath("$.reviewVideoUrl").value("https://youtube.com/review-video"));
     }
+
+
+
+
 
 
 
@@ -149,4 +165,3 @@ public class AssignmentControllerTest {
                 .andExpect(status().isOk());
     }
 }
-*/

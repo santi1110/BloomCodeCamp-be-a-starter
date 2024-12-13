@@ -79,8 +79,8 @@ public class AssignmentController {
 
     // Update an existing assignment - Restricted to learners
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('LEARNER')") // Only learners can update assignments
-    public ResponseEntity<Assignment> updateAssignment(@PathVariable Long id, @RequestBody Assignment updatedAssignment) {
+    @PreAuthorize("hasRole('LEARNER')")
+    public ResponseEntity<AssignmentResponseDto> updateAssignment(@PathVariable Long id, @RequestBody Assignment updatedAssignment) {
         return assignmentRepository.findById(id)
                 .map(existingAssignment -> {
                     existingAssignment.setStatus(updatedAssignment.getStatus());
@@ -88,11 +88,12 @@ public class AssignmentController {
                     existingAssignment.setGithubUrl(updatedAssignment.getGithubUrl());
                     existingAssignment.setBranch(updatedAssignment.getBranch());
                     existingAssignment.setReviewVideoUrl(updatedAssignment.getReviewVideoUrl());
-                    assignmentRepository.save(existingAssignment);
-                    return ResponseEntity.ok(existingAssignment);
+                    Assignment savedAssignment = assignmentRepository.save(existingAssignment);
+                    return ResponseEntity.ok(new AssignmentResponseDto(savedAssignment));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     // Delete an assignment - Restricted to admins
     @DeleteMapping("/{id}")

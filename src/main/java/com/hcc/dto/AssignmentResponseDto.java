@@ -22,7 +22,7 @@ public class AssignmentResponseDto {
         this.githubUrl = assignment.getGithubUrl();
         this.branch = assignment.getBranch();
         this.reviewVideoUrl = assignment.getReviewVideoUrl();
-        this.username = assignment.getUser().getUsername(); // Extract username
+        this.username = assignment.getUser() != null ? assignment.getUser().getUsername() : null; // Handle null user
     }
 
     // Constructor for error messages
