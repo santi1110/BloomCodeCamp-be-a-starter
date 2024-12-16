@@ -36,11 +36,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
+        http.cors() // Enable CORS
+                .and()
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/auth/**").permitAll() // Permit authentication endpoint without authentication
-                .antMatchers("/assignments/**").hasRole("LEARNER") // Access control for assignments
-                .anyRequest().authenticated() // All other requests need authentication
+                .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/assignments/**").hasRole("LEARNER")
+                .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
@@ -51,7 +53,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     response.getWriter().write("{\"error\": \"Unauthorized\"}");
                 });
 
-        // Add the authenticator filter before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(authenticatorFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
